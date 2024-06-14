@@ -4,15 +4,14 @@ on:
   push:
     paths:
       - '.github/workflows/hp-pavilion-14-dv1xxx.yml'
-      - 'conf/**'
+      - 'conf/hp-pavilion-14-dv1xxx'
   workflow_dispatch:
 
 jobs:
   build:
     strategy:
       matrix:
-        upstream: [alemontn/my-kernel]
-        kpath: [~/my-kernel/linux]
+        repo: [~/work/my-kernel/my-kernel]
         kver: [6.9]
         conf: [hp-pavilion-14-dv1xxx]
 
@@ -27,61 +26,43 @@ jobs:
            liblzma-dev libssl-dev libz-dev curl tar gcc-10 g++-10 zstd \
            debhelper-compat
 
-      - name: Get source
-        env:
-          repo: ${{ matrix.upstream }}
-        run: git clone -v --progress https://github.com/"$repo" ~/my-kernel
+      - name: Checkout source
+        uses: actions/checkout@v3
+        with:
+          repo: alemontn/my-kernel
+          path: ${{ matrix.repo }}
 
-      - name: Get kernel source
-        env:
-          kpath: ${{ matrix.kpath }}
-          kver: ${{ matrix.kver }}
-          repo: ${{ matrix.source }}
+      - name: Update kernel source
         run: |
-          cd ~/my-kernel
-          git submodule update --init "${kpath##*'/'}"
-          cd "${kpath##*'/'}"
-          # switch to provided kernel version
+          cd ${{ matrix.repo }}
+          git submodule update --init linux
+          cd linux
           git checkout v"$kver"
 
       - name: Setup kernel source
-        env:
-          kpath: ${{ matrix.kpath }}
-          conf: ${{ matrix.conf }}
         run: |
-          cd "$kpath"
-          # make sure repo is clean
-          make mrproper
+          cd ${{ matrix.repo }}/linux
           make clean
-          # get config
-          cp ../conf/"$conf" .config
+          cp ${{ matrix.repo }}/conf/${{ matrix.conf }} .config
 
       - name: Build kernel
-        env:
-          kpath: ${{ matrix.kpath }}
         run: |
-          cd "$kpath"
+          cd ${{ matrix.repo }}/linux
           make -j$(nproc --all)
           make bindeb-pkg
 
-      - name: Package compiled kernel
-        env:
-          kpath: ${{ matrix.kpath }}
+      - name: Package kernel
         run: |
-          cd "$kpath"
-          # get depth of 1 (x/y)
-          ls=$(find debian -maxdepth 1 | grep -F "debian/linux-")
-          # find terms for image & headers package
-          image=$(grep -F "debian/linux-image-" <<<"$ls" | head -1)
-          headers=$(grep -F "debian/linux-headers-" <<<"$ls" | head -1)
-          # build the packages
+          cd ${{ matrix.repo }}/linux
+          find=$(find debian -maxdepth 1 | grep -F "debian/linux-")
+          image=$(grep -F "debian/linux-image-" <<<"$find" | head -1)
+          headers=$(grep -F "debian/linux-headers-" <<<"$find" | head -1)
           dpkg-deb --root-owner-group --build "$image"
           dpkg-deb --root-owner-group --build "$headers"
-          # move to home
           mkdir ~/out
-          mv "$image".deb "$headers".deb ~/out
+          mv *.deb ~/out
 
-      - name: Upload DEB
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: kernel

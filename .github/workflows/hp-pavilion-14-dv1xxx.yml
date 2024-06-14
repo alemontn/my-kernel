@@ -10,7 +10,7 @@ jobs:
   build:
     strategy:
       matrix:
-        upstream: [https://github.com/alemontn/my-kernel]
+        upstream: [alemontn/my-kernel]
         kpath: [~/my-kernel/kernel]
         kver: [6.9]
         conf: [hp-pavilion-14-dv1xxx]
@@ -29,7 +29,7 @@ jobs:
       - name: Get source
         env:
           repo: ${{ matrix.upstream }}
-        run: git clone -v --progress "$repo" ~/my-kernel
+        run: git clone -v --progress https://github.com/"$repo" ~/my-kernel
 
       - name: Get kernel source
         env:

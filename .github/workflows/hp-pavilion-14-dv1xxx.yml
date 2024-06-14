@@ -1,0 +1,85 @@
+name: HP Pavilion 14-dv1xxx
+
+on:
+  push:
+    - 'conf/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        kpath: [~/my-kernel/kernel]
+        kver: [6.9]
+        conf: [hp-pavilion-14-dv1xxx]
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt install -y --fix-broken --fix-missing \
+           build-essential flex bison bc ncurses-dev texinfo gcc gperf patch libtool \
+           automake g++ libncurses5-dev gawk subversion expat gettext libexpat1-dev \
+           python-all-dev binutils-dev libcap-dev libmpfr-dev autopoint txt2man \
+           liblzma-dev libssl-dev libz-dev curl tar gcc-10 g++-10 zstd \
+           debhelper-compat
+
+      - name: Checkout source
+        uses: actions/checkout@v3
+        with:
+          repository: alemontn/my-kernel
+          path: /home/runner/my-kernel
+
+      - name: Get kernel source
+        env:
+          kpath: ${{ matrix.kpath }}
+          kver: ${{ matrix.kver }}
+          repo: ${{ matrix.source }}
+        run: |
+          git submodule update --init "$kpath"
+          cd "$kpath"
+          # switch to provided kernel version
+          git checkout v"$kver"
+
+      - name: Setup kernel source
+        env:
+          kpath: ${{ matrix.kpath }}
+          conf: ${{ matrix.conf }}
+        run: |
+          cd "$kpath"
+          # make sure repo is clean
+          make mrproper
+          make clean
+          # get config
+          cp ../conf/"$conf" .config
+
+      - name: Build kernel
+        env:
+          kpath: ${{ matrix.kpath }}
+        run: |
+          cd "$kpath"
+          make -j$(nproc --all)
+          make bindeb-pkg
+
+      - name: Package compiled kernel
+        env:
+          kpath: ${{ matrix.kpath }}
+        run: |
+          cd "$kpath"
+          # get depth of 1 (x/y)
+          ls=$(find debian -maxdepth 1 | grep -F "debian/linux-")
+          # find terms for image & headers package
+          image=$(grep -F "debian/linux-image-" <<<"$ls" | head -1)
+          headers=$(grep -F "debian/linux-headers-" <<<"$ls" | head -1)
+          # build the packages
+          dpkg-deb --root-owner-group --build "$image"
+          dpkg-deb --root-owner-group --build "$headers"
+          # move to home
+          mkdir ~/out
+          mv "$image".deb "$headers".deb ~/out
+
+      - name: Upload DEB
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel
+          path: /home/runner/out

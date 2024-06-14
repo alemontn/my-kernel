@@ -38,7 +38,7 @@ jobs:
           kver: ${{ matrix.kver }}
           repo: ${{ matrix.source }}
         run: |
-          cd "$kpath"/..
+          cd ~/my-kernel
           git submodule update --init kernel/
           cd "$kpath"
           # switch to provided kernel version

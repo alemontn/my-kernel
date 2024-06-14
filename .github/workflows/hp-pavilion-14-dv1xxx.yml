@@ -3,6 +3,7 @@ name: HP Pavilion 14-dv1xxx
 on:
   push:
     paths:
+      - '.github/workflows/hp-pavilion-14-dv1xxx.yml'
       - 'conf/**'
   workflow_dispatch:
 
@@ -37,7 +38,8 @@ jobs:
           kver: ${{ matrix.kver }}
           repo: ${{ matrix.source }}
         run: |
-          git submodule update --init "$kpath"
+          cd "$kpath"/..
+          git submodule update --init kernel/
           cd "$kpath"
           # switch to provided kernel version
           git checkout v"$kver"

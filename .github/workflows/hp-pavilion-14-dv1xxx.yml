@@ -10,6 +10,7 @@ jobs:
   build:
     strategy:
       matrix:
+        upstream: [https://github.com/alemontn/my-kernel]
         kpath: [~/my-kernel/kernel]
         kver: [6.9]
         conf: [hp-pavilion-14-dv1xxx]
@@ -25,11 +26,10 @@ jobs:
            liblzma-dev libssl-dev libz-dev curl tar gcc-10 g++-10 zstd \
            debhelper-compat
 
-      - name: Checkout source
-        uses: actions/checkout@v3
-        with:
-          repository: alemontn/my-kernel
-          path: /home/runner/my-kernel
+      - name: Get source
+        env:
+          repo: ${{ matrix.upstream }}
+        run: git clone -v --progress "$repo" ~/my-kernel
 
       - name: Get kernel source
         env:

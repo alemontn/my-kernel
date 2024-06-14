@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         upstream: [alemontn/my-kernel]
-        kpath: [~/my-kernel/kernel]
+        kpath: [~/my-kernel/linux]
         kver: [6.9]
         conf: [hp-pavilion-14-dv1xxx]
 
@@ -39,7 +39,7 @@ jobs:
           repo: ${{ matrix.source }}
         run: |
           cd ~/my-kernel
-          git submodule update --init kernel/
+          git submodule update --init "${kpath##*'/'}"
           cd "$kpath"
           # switch to provided kernel version
           git checkout v"$kver"

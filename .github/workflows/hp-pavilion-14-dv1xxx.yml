@@ -2,7 +2,8 @@ name: HP Pavilion 14-dv1xxx
 
 on:
   push:
-    - 'conf/**'
+    paths:
+      - 'conf/**'
   workflow_dispatch:
 
 jobs:

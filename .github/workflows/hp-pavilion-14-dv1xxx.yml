@@ -40,7 +40,7 @@ jobs:
         run: |
           cd ~/my-kernel
           git submodule update --init "${kpath##*'/'}"
-          cd "$kpath"
+          cd "${kpath##*'/'}"
           # switch to provided kernel version
           git checkout v"$kver"
 

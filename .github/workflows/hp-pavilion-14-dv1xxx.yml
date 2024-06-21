@@ -11,7 +11,7 @@ jobs:
   build:
     strategy:
       matrix:
-        repo: [~/work/my-kernel/my-kernel]
+        repo: [~/work/my-kernel/my-kernel/repo]
         kver: [6.9]
         conf: [hp-pavilion-14-dv1xxx]
 
@@ -27,15 +27,12 @@ jobs:
            debhelper-compat
 
       - name: Checkout source
-        uses: actions/checkout@v3
-        with:
-          repo: alemontn/my-kernel
-          path: ${{ matrix.repo }}
+        run: git clone https://github.com/alemontn/my-kernel ${{ matrix.repo }}
 
       - name: Update kernel source
         run: |
           cd ${{ matrix.repo }}
-          git submodule update --init linux
+          git submodule update --init ./linux
           cd linux
           git checkout v"$kver"
 

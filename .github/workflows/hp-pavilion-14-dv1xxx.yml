@@ -34,7 +34,7 @@ jobs:
           cd ${{ matrix.repo }}
           git submodule update --init ./linux
           cd linux
-          git checkout v"$kver"
+          git checkout v${{ matrix.kver }}
 
       - name: Setup kernel source
         run: |

@@ -24,7 +24,7 @@ jobs:
            automake g++ libncurses5-dev gawk subversion expat gettext libexpat1-dev \
            python-all-dev binutils-dev libcap-dev libmpfr-dev autopoint txt2man \
            liblzma-dev libssl-dev libz-dev curl tar gcc-10 g++-10 zstd \
-           debhelper-compat
+           debhelper-compat libelf-dev linux-headers-amd64
 
       - name: Checkout source
         run: git clone https://github.com/alemontn/my-kernel ${{ matrix.repo }}
